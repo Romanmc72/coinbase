@@ -26,11 +26,11 @@ I will just be using roughly $200 spread between BTC and ETH for this experiment
 
 ## Using this Code
 
-Head over to the `src/` directory and check things out from there. I am starting from scratch using this example code [here](https://developers.coinbase.com/docs/wallet/api-key-authentication) and the coinbase API docs online as of the time of writing this live [here](https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getaccounts). You can run the unit tests with the Makefile at the root of this repo, run `make test` to see the output.
+Head over to the `src/` directory and check things out from there. I am starting from scratch using this example code [here](https://developers.coinbase.com/docs/wallet/api-key-authentication) and the coinbase API docs online as of the time of writing this live [here](https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getaccounts). You can run the unit tests with the Makefile at the root of this repo, install the `test_requirements.txt` and run `make test` to see the output.
 
 ### Setup
 
-To use this as a library you can install it and create a Coinbase API Client to interact with the Coinbase API. You will simply need to have the environment variables set for `CB_API_KEY` and `CB_SECRET_KEY` to the values for your own coinbase account API keys, and you should allow your API keys to have read access to pretty much everything it can have read access to in order to hit certain endpoints. Be careful to never check your API keys into version control or store them in plaintext.
+To use this as a library you can import it and install the requirements laid out in `requirements.txt` and create a Coinbase API Client to interact with the Coinbase API. You will simply need to have the environment variables set for `CB_API_KEY` and `CB_SECRET_KEY` to the values for your own coinbase account API keys, and you should allow your API keys to have read access to pretty much everything it can have read access to in order to hit certain endpoints. Be careful to never check your API keys into version control or store them in plaintext.
 
 ### Usage
 
