@@ -22,7 +22,7 @@ DB = DatabaseClient()
 logger = get_logger(level=logging.INFO)
 
 
-def main() -> None:
+def track_prices() -> None:
     """The main program to execute the tracking and trades together"""
     now = datetime.utcnow()
 
@@ -32,14 +32,12 @@ def main() -> None:
         Currency.DOGE_COIN,
     ]
 
-    for currency in  currencies_to_pull:
+    for currency in currencies_to_pull:
         logger.info(f"Pulling price for {currency}")
         current_price = ORCHESTRATOR.get_exchange_rate(currency)
         DB.write_crypto_price(currency, current_price, now)
-        logger.info({
-            CURRENCY_FIELD_NAME: currency, PRICE_FIELD_NAME: current_price
-        })
+        logger.info({CURRENCY_FIELD_NAME: currency, PRICE_FIELD_NAME: current_price})
 
 
 if __name__ == "__main__":
-    main()
+    track_prices()

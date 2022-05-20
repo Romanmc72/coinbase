@@ -26,11 +26,11 @@ PRICE_FIELD_NAME = "price"
 
 
 class TimeUnit(str, Enum):
-    MINUTES: 'm'
-    HOURS: 'h'
-    DAYS: 'd'
-    MONTHS: 'mo'
-    YEARS: 'y'
+    MINUTES: "m"
+    HOURS: "h"
+    DAYS: "d"
+    MONTHS: "mo"
+    YEARS: "y"
 
 
 class DatabaseClient(influxdb_client.InfluxDBClient):
@@ -64,6 +64,7 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
     :measurement_name: str = None (default = ENV_VAR ${INFLUXDB_MEASUREMENT_NAME})
     The name of the measurement you are going to write
     """
+
     def __init__(
         self,
         bucket: str = None,
@@ -78,7 +79,9 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
         self.token = token or os.environ["INFLUXDB_ADMIN_TOKEN"]
         self.url = url or os.getenv("INFLUXDB_URL", "https://localhost:8086")
         self.ssl_ca_cert = ssl_ca_cert or os.environ["INFLUXDB_SSL_CA_CERT"]
-        self.measurement_name = measurement_name or os.environ["INFLUXDB_MEASUREMENT_NAME"]
+        self.measurement_name = (
+            measurement_name or os.environ["INFLUXDB_MEASUREMENT_NAME"]
+        )
         super().__init__(
             url=self.url,
             token=self.token,
@@ -113,15 +116,14 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
         """
         ts = timestamp or datetime.utcnow()
         write_api = self.write_api(write_options=SYNCHRONOUS)
-        data_point = influxdb_client.Point(
-            self.measurement_name
-        ).tag(
-            CURRENCY_FIELD_NAME, currency.value
-        ).field(
-            PRICE_FIELD_NAME, float(price)
-        ).time(
-            ts,
-            write_precision=influxdb_client.WritePrecision.MS,
+        data_point = (
+            influxdb_client.Point(self.measurement_name)
+            .tag(CURRENCY_FIELD_NAME, currency.value)
+            .field(PRICE_FIELD_NAME, float(price))
+            .time(
+                ts,
+                write_precision=influxdb_client.WritePrecision.MS,
+            )
         )
         logger.debug(f"Writing {currency}, {price}, {ts}")
         write_api.write(bucket=self.bucket, org=self.org, record=data_point)
@@ -154,18 +156,54 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
         """
         query_api = self.query_api()
 
-        query = f'''from(bucket:"{self.bucket}")
-        |> range(start: -{window}{time_unit})
+        query = f"""from(bucket:"{self.bucket}")
+        |> range(start: -{window}{time_unit.value})
         |> filter(fn: (r) => r._measurement == "{self.measurement_name}")
-        |> filter(fn: (r) => r.currency == "{currency}")
+        |> filter(fn: (r) => r.currency == "{currency.value}")
         |> filter(fn: (r) => r._field == "{PRICE_FIELD_NAME}") 
         |> aggregateWindow(every: inf, fn: mean)
-        '''
+        """
         logger.debug(f"Query: {query}")
         result = query_api.query(org=self.org, query=query)
 
         table = json.loads(json.dumps(result, cls=FluxStructureEncoder))
         logger.debug(table)
-        avg_price = table[0]['records'][0]['values']['_value']
+        avg_price = table[0]["records"][0]["values"]["_value"]
 
         return avg_price
+
+    def write_trade_executed(
+        self,
+        from_currency: Currency,
+        to_currency: Currency,
+        from_amount: float,
+        to_amount: float,
+        price: float,
+    ) -> None:
+        """
+        Description
+        -----------
+        Record a trade that was executed.
+
+        Params
+        ------
+        :from_currency: Currency
+        The currency identifier that the trade was from.
+
+        :to_currency: Currency
+        The currency that was traded to.
+
+        :from_amount: float
+        The amount that was traded from in terms of the from_currency.
+
+        :to_amount: float
+        The amount that was traded to in terms of the to_currency.
+
+        :price: float
+        The price recorded at the time of the trade.
+
+        Return
+        ------
+        None
+        """
+        pass
