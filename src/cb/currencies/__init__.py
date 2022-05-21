@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Constants representing each currency we are interested in"""
 
-from enum import Enum
+from cb.enums import StringEnum
 
 
-class Currency(str, Enum):
+class Currency(StringEnum):
     BITCOIN = "BTC"
     ETHEREUM = "ETH"
     DOGE_COIN = "DOGE"

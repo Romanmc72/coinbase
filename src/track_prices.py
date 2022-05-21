@@ -12,9 +12,7 @@ from datetime import datetime
 from cb.auth.orchestrator import CoinbaseOrchestrator
 from cb.currencies import Currency
 from cb.logs.logger import get_logger
-from db.client import DatabaseClient
-from db.client import CURRENCY_FIELD_NAME
-from db.client import PRICE_FIELD_NAME
+from db.client import CURRENCY_FIELD_NAME, PRICE_FIELD_NAME, DatabaseClient
 
 ORCHESTRATOR = CoinbaseOrchestrator()
 DB = DatabaseClient()

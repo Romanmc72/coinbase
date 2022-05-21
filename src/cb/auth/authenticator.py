@@ -5,16 +5,19 @@ Description
 This module is meant to be imported and used in conjunction with the
 orchestrator in order to call the API endpoints that you care about.
 """
+import base64
 import hashlib
 import hmac
+import logging
 import os
 import time
 from abc import abstractmethod
 from datetime import datetime
-from enum import Enum
 
 import requests
 from requests.auth import AuthBase
+
+from cb.enums import StringEnum
 
 # DOCS: https://developers.coinbase.com/api/v2#introduction
 APPLICATION_API_URL = "https://api.coinbase.com/v2/"
@@ -31,8 +34,10 @@ VAR_NOT_SET_MESSAGE = """ \
 Coinbase `{arg_name}` not provided, please pass \
 one in or set it in the ENV VAR {env_var_name}"""
 
+logger = logging.getLogger()
 
-class Environment(str, Enum):
+
+class Environment(StringEnum):
     APPLICATION = "APPLICATION"
     EXCHANGE = "EXCHANGE"
 
@@ -56,6 +61,7 @@ class CoinbaseAuth(AuthBase):
 
     def __init__(
         self,
+        environment: Environment,
         base_url: str,
         api_key_env_var: str,
         secret_key_env_var: str,
@@ -65,6 +71,7 @@ class CoinbaseAuth(AuthBase):
         passphrase: str = None,
     ):
         error_message = ""
+        self.environment = environment
         self.base_url = base_url
         self.api_key_env_var = api_key_env_var
         self.secret_key_env_var = secret_key_env_var
@@ -94,7 +101,9 @@ class CoinbaseAuth(AuthBase):
         if error_message:
             raise CoinbaseAuthException(error_message)
 
-    def _generate_common_headers(self, request: requests.request) -> dict:
+    def _generate_common_headers(
+        self, request: requests.request, default_encoding: str = "utf8"
+    ) -> dict:
         """
         Description
         -----------
@@ -107,15 +116,48 @@ class CoinbaseAuth(AuthBase):
         :request: requests.request
         The request from whom we get some of the required parameters for the
         hmac signature.
-        """
-        timestamp = str(int(time.time()))
-        message = timestamp + request.method + request.path_url + (request.body or "")
 
-        signature = hmac.new(
-            key=self.secret_key.encode("utf8"),
-            msg=message.encode("utf8"),
+        :default_encoding: str = "utf8"
+        The default encoding/decoding to use for strings.
+
+        Return
+        ------
+        dict
+        The headers common to any CoinbaseAuth type
+        """
+
+        timestamp = str(int(time.time()))
+
+        message = (
+            timestamp
+            + request.method
+            + request.path_url
+            + (request.body.decode(default_encoding) if request.body else "")
+        )
+
+        if self.environment == Environment.APPLICATION:
+            sk = self.secret_key.encode(default_encoding)
+        elif self.environment == Environment.EXCHANGE:
+            sk = base64.b64decode(self.secret_key)
+        else:
+            raise CoinbaseAuthException(
+                f"Invalid environment selection {self.environment}"
+            )
+
+        hmac_signature = hmac.new(
+            key=sk,
+            msg=message.encode(default_encoding),
             digestmod=hashlib.sha256,
-        ).hexdigest()
+        )
+
+        if self.environment == Environment.APPLICATION:
+            signature = hmac_signature.hexdigest()
+        elif self.environment == Environment.EXCHANGE:
+            signature = base64.b64encode(hmac_signature.digest()).decode(default_encoding)
+        else:
+            raise CoinbaseAuthException(
+                f"Invalid environment selection {self.environment}"
+            )
 
         return {
             "Accept": "application/json",
@@ -177,6 +219,7 @@ class CoinbaseApplicationAuth(CoinbaseAuth):
         secret_key: str = None,
     ) -> None:
         super().__init__(
+            environment=Environment.APPLICATION,
             base_url=APPLICATION_API_URL,
             api_key_env_var=CB_API_KEY_ENV_VAR_NAME,
             secret_key_env_var=CB_SECRET_KEY_ENV_VAR_NAME,
@@ -247,9 +290,10 @@ class CoinbaseExchangeAuth(CoinbaseAuth):
         self, api_key: str = None, secret_key: str = None, passphrase: str = None
     ):
         super().__init__(
+            environment=Environment.EXCHANGE,
             base_url=EXCHANGE_API_URL,
             api_key_env_var=CB_EXCHANGE_API_KEY_ENV_VAR_NAME,
-            secret_key_env_var=CB_EXCHANGE_PASSPHRASE_ENV_VAR_NAME,
+            secret_key_env_var=CB_EXCHANGE_SECRET_KEY_ENV_VAR_NAME,
             passphrase_env_var=CB_EXCHANGE_PASSPHRASE_ENV_VAR_NAME,
             api_key=api_key,
             secret_key=secret_key,

@@ -118,7 +118,7 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
         write_api = self.write_api(write_options=SYNCHRONOUS)
         data_point = (
             influxdb_client.Point(self.measurement_name)
-            .tag(CURRENCY_FIELD_NAME, currency.value)
+            .tag(CURRENCY_FIELD_NAME, currency)
             .field(PRICE_FIELD_NAME, float(price))
             .time(
                 ts,
@@ -157,9 +157,9 @@ class DatabaseClient(influxdb_client.InfluxDBClient):
         query_api = self.query_api()
 
         query = f"""from(bucket:"{self.bucket}")
-        |> range(start: -{window}{time_unit.value})
+        |> range(start: -{window}{time_unit})
         |> filter(fn: (r) => r._measurement == "{self.measurement_name}")
-        |> filter(fn: (r) => r.currency == "{currency.value}")
+        |> filter(fn: (r) => r.currency == "{currency}")
         |> filter(fn: (r) => r._field == "{PRICE_FIELD_NAME}") 
         |> aggregateWindow(every: inf, fn: mean)
         """
