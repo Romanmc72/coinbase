@@ -1,4 +1,17 @@
-# Coinbase
+# UPDATE
+
+Update!! Coinbase's API kinda sucks. Can't transfer money between my own balances programmatically on either the base API or via the Pro API (at least how I found going through their online API documentation and actually trying it out). I put some questions/complaints on their forum and opened a question on stack overflow. We will see if anything comes of it, but my hopes are low given it looks like their "forum" is where issues goe to die and never be read again. Shite community and API IMHO. So I am abandoning this project but keeping it in here for now. I did not update unittesting for the last few commits because well the PIA downstream doesn't do the things.
+
+Complaints I made on their forum:
+
+- [Coinbase Pro API complaint](https://forums.coinbasecloud.dev/t/currency-conversion-fails/728/2) (there was an existing one that was similar, so I tagged in the comment)
+- [Coinbase API complaint](https://forums.coinbasecloud.dev/t/transfer-eth-to-btc-via-api-in-my-own-account/741)
+
+Sike, even mor definitive, they confirmed that you cannot do conversions on the API at all. Is that in their documentation? Nah fam. It is buried in a form wall post. Good luck finding it, I couldn't.
+
+[SO Post that linked me to it](https://stackoverflow.com/questions/71773378/coinbase-api-conversion-endpoint-conversions) and the "[it](https://forums.coinbasecloud.dev/t/unable-to-successfully-convert-crypto-to-another-crypto/289/13?u=romanmc72)" that is that forum wall post.
+
+## Coinbase
 
 Coinbase is a crypto currency exchange where you can buy, sell, hold, and exchange crypto currencies. For managing your own wallet and only your own wallet programmatically they offer API Keys, and for accessing a multitude of wallets they offer Oauth2 protocols. Here in this repository I am interested in taking the very small sum of BTC and ETH that I own and coming up with a means by which I can instruct the computer to make trades between the two within my own account on my behalf to perform some form of price arbitrage to generate a profit. Let's see if this works.
 
